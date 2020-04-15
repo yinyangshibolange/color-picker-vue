@@ -209,6 +209,7 @@ export default {
       this.triggerHueMove(ev);
     },
     triggerHueMove(evd) {
+        this.clearEv(evd)
       const width = this.size[this.sizeType].colors.width;
       const downpagex = evd.pageX;
       let origincurh = this.curc.hsv[0];
@@ -242,6 +243,7 @@ export default {
       this.triggerAlphaMove(ev);
     },
     triggerAlphaMove(evd) {
+        this.clearEv(evd)
       const width = this.size[this.sizeType].alpha.width;
       const downpagex = evd.pageX;
       let originAlpha = this.curc.alpha;
