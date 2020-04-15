@@ -12,8 +12,8 @@ export class Rgb {
   /**
    * 分解输入的颜色
    */
-  breakInColor(color) {
-    const temp = {};
+  breakInColor(color: any) {
+    const temp: any = {};
     if (color instanceof Array) {
       temp.rgb = [color[0], color[1], color[2]];
       if (color[3] !== undefined) temp.alpha = color[3]
@@ -31,6 +31,8 @@ export class Rgb {
       } else if (color.indexOf('#') > -1) {
         temp.rgb = this.hex2rgb(color);
       }
+    } else {
+      return color
     }
     return temp
   }
