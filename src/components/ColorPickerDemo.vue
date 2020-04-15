@@ -74,10 +74,10 @@
 
 <script>
 // 原理及公式参考地址: https://www.rapidtables.com/convert/color/index.html
-import { ColorPicker } from "@/classes/ColorPicker.js";
+import { Rgb } from "@/classes/Rgb.js";
 export default {
   data() {
-     const curc = new ColorPicker("#ffffff");
+     const curc = new Rgb("#ffffff");
     return {
       size: {
         small: {
@@ -273,7 +273,7 @@ export default {
   mounted() {
     const aRgb = [191, 191, 191];
     if (!this.curc) {
-      this.curc = new ColorPicker("#fff");
+      this.curc = new Rgb("#fff");
     } else {
       this.curc.updateColor({
         rgb: aRgb

@@ -17,7 +17,7 @@ export class Rgb {
     if (color instanceof Array) {
       temp.rgb = [color[0], color[1], color[2]];
       if (color[3] !== undefined) temp.alpha = color[3]
-    } else if (color instanceof String) {
+    } else if (typeof color === 'string') {
       if (color.indexOf('rgba') > -1) {
         const rgba = color
         .split(',')
@@ -48,6 +48,7 @@ export class Rgb {
       this.hsv = this.rgb2hsv(color.rgb);
       this.huebgrgb = this.hsv2rgb([this.hsv[0], 1, 1]);
     }
+    if (color.alpha !== undefined) this.alpha = color.alpha
     if (
       color.h !== undefined ||
       color.s !== undefined ||
@@ -74,16 +75,6 @@ export class Rgb {
         rgb: this.rgb,
       });
     }
-  }
-
-  switchColorType(color) {
-    if (color instanceof Array) return 'argb';
-    if (color instanceof String) {
-      if (color.indexOf('rgba') > -1) return 'rgba';
-      if (color.indexOf('rgb') > -1) return 'rgb';
-      if (color.indexOf('#') > -1) return 'hex';
-    }
-    return;
   }
 
   rgb2hex(rgb) {
