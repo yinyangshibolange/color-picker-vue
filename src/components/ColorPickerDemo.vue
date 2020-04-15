@@ -137,7 +137,7 @@ export default {
       },
       curc,
       alpha: 0,
-    };
+    };nnnnnnnn
   },
   props: {
     sizeType: {
@@ -163,6 +163,7 @@ export default {
       this.triggerSvMove(ev);
     },
     triggerSvMove(evd) {
+        this.clearEv(evd)
       const width = this.size[this.sizeType].panel.width;
       const height = this.size[this.sizeType].panel.height;
       const downpagex = evd.pageX;
