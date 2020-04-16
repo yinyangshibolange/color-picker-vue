@@ -4,6 +4,7 @@ export class Rgb {
   rgb = [0, 0, 0];
   alpha = 1;
   huebgrgb = [0, 0, 0]; // 显示用rgb色相背景色,选择色相时用
+  type = 'hex'; // 'hex' or 'rgb'
 
   hexmap = /^#([0-9a-fA-F]{6}|[0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{8})$/;
   rgbmap = /^[rR][gG][Bb][\(]((2[0-4][0-9]|25[0-5]|[01]?[0-9][0-9]?),){2}(2[0-4][0-9]|25[0-5]|[01]?[0-9][0-9]?),?[\)]|[rR][gG][Bb][Aa][\(]((2[0-4][0-9]|25[0-5]|[01]?[0-9][0-9]?),){3}(0\.\d{1,2}|1|0)[\)]$/;
@@ -18,32 +19,38 @@ export class Rgb {
   breakInColor(color) {
     const temp = {};
     if (color instanceof Array) {
+      if(color.length < 3) return color
       temp.rgb = [color[0], color[1], color[2]];
       if (color[3] !== undefined) temp.alpha = color[3];
+      this.type = 'rgb'
     } else if (typeof color === 'string') {
       // 替换空格
-      color = color.replace(/\s/gi, '');
+      color = color.replace(/\s/g, '');
       // 颜色正则表达式 验证
       if (!this.hexmap.test(color) && !this.rgbmap.test(color))
         // 验证失败 拦截
-        return temp;
-
+        return color;
       if (color.indexOf('rgba') > -1) {
         const rgba = color
           .split(',')
           .map(x =>
-            typeof x === 'string' ? Number(x.replace(/[^(0-9|\.)]/gi, '')) : x,
+            typeof x === 'string' ? Number(x.replace(/[^0-9\.]/g, '')) : x,
           ) || [0, 0, 0, 1];
         temp.rgb = [rgba[0], rgba[1], rgba[2]];
         temp.alpha = rgba[3];
+        this.type = 'rgb'
       } else if (color.indexOf('rgb') > -1) {
         temp.rgb = color
           .split(',')
           .map(x =>
-            typeof x === 'string' ? Number(x.replace(/[^(0-9|\.)]/gi, '')) : x,
+            typeof x === 'string' ? Number(x.replace(/[^0-9\.]/g, '')) : x,
           ) || [0, 0, 0];
+          this.type = 'rgb'
       } else if (color.indexOf('#') > -1) {
-        temp.rgb = this.hex2rgb(color);
+        const _rgb = this.hex2rgb(color);
+        temp.rgb = [_rgb[0], _rgb[1], _rgb[2]]
+        if(_rgb[3] !== undefined) temp.alpha = _rgb[3]
+        this.type = 'hex'
       }
     } else {
       return color;
@@ -52,24 +59,36 @@ export class Rgb {
   }
 
   updateColor(color) {
-    color = this.breakInColor(color);
+   color = this.breakInColor(color);
+
+   console.log(color)
+
+    let updatedFlag = false; // 判断颜色是否更新
+    
+    
     if (color.hsv) {
       if (!this.hsv || this.hsv[0] !== color.hsv[0])
         this.huebgrgb = this.hsv2rgb([color.hsv[0], 1, 1]);
       this.hsv = color.hsv;
       this.rgb = this.hsv2rgb(color.hsv);
+
+      updatedFlag = true
     }
     if (color.rgb) {
       this.rgb = color.rgb;
       this.hsv = this.rgb2hsv(color.rgb);
       this.huebgrgb = this.hsv2rgb([this.hsv[0], 1, 1]);
+
+      updatedFlag = true
     }
     if (color.alpha !== undefined) {
-      let alphaTemp =
+      const alphaTemp =
         typeof color.alpha === 'string'
-          ? Number(color.alpha.replace(/[^(0-9|\.)]/gi, ''))
+          ? Number(color.alpha.replace(/[^0-9\.]/g, ''))
           : color.alpha;
       this.alpha = Math.floor(alphaTemp * 100) / 100;
+
+      updatedFlag = true
     }
 
     if (
@@ -94,21 +113,27 @@ export class Rgb {
       if (color.r !== undefined) this.rgb = [color.r, this.rgb[1], this.rgb[2]];
       if (color.g !== undefined) this.rgb = [this.rgb[0], color.g, this.rgb[2]];
       if (color.b !== undefined) this.rgb = [this.rgb[0], this.rgb[1], color.b];
+      this.type = 'rgb'
       return this.updateColor({
         rgb: this.rgb,
       });
     }
 
-    if (this.alpha === 1) {
+    if(updatedFlag === false)
+    return color
+
+    console.log(this.rgb)
+    console.log(this.alpha)
+    if (this.type === 'hex') {
+      if(this.alpha < 1) return this.rgb2hex([...this.rgb, this.alpha])
       return this.rgb2hex(this.rgb);
-    } else {
-      return `rgba(${this.rgb.join(',')},${this.alpha})`;
+    } else if( this.type === 'rgb'){
+      if(this.alpha < 1) return `rgba(${this.rgb.join(',')},${this.alpha})`;
+      return `rgb(${this.rgb.join(',')})`
     }
   }
 
   rgb2hex(rgb) {
-    console.log('rgb2hex:');
-    console.log(rgb);
     let aRgb;
     if (rgb instanceof Array) {
       aRgb = rgb;
@@ -117,11 +142,9 @@ export class Rgb {
     } else {
       aRgb = [0, 0, 0];
     }
-    console.log('aRgb');
-    console.log(aRgb);
     let temp;
     aRgb = aRgb.map(x =>
-      typeof x === 'string' ? Number(aRgb[0].replace(/[^(0-9|\.)]/gi, '')) : x,
+      typeof x === 'string' ? Number(aRgb[0].replace(/[^0-9\.]/g, '')) : x,
     );
     return (
       '#' +
@@ -130,7 +153,7 @@ export class Rgb {
         (temp = aRgb[1].toString(16)).length === 1 ? '0' + temp : temp,
         (temp = aRgb[2].toString(16)).length === 1 ? '0' + temp : temp,
         aRgb[3]
-          ? (temp = (aRgb[3] * 255).toString(16)).length === 1
+          ? (temp = Math.floor(aRgb[3] * 255).toString(16)).length === 1
             ? '0' + temp
             : temp
           : '',
