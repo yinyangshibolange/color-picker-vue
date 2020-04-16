@@ -15,8 +15,8 @@ export class Rgb {
   /**
    * 分解输入的颜色
    */
-  breakInColor(color: any) {
-    const temp: any = {};
+  breakInColor(color) {
+    const temp = {};
     if (color instanceof Array) {
       temp.rgb = [color[0], color[1], color[2]];
       if (color[3] !== undefined) temp.alpha = color[3];
