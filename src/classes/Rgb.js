@@ -10,14 +10,15 @@ export class Rgb {
   rgbmap = /^[rR][gG][Bb][\(]((2[0-4][0-9]|25[0-5]|[01]?[0-9][0-9]?),){2}(2[0-4][0-9]|25[0-5]|[01]?[0-9][0-9]?),?[\)]|[rR][gG][Bb][Aa][\(]((2[0-4][0-9]|25[0-5]|[01]?[0-9][0-9]?),){3}(0\.\d{1,2}|1|0)[\)]$/;
 
   constructor(color) {
+    if(!color) color = '#fff'
     this.updateColor(color);
   }
 
   /**
    * 分解输入的颜色
    */
-  breakInColor(color) {
-    const temp = {};
+  breakInColor(color: any) {
+    const temp: any = {};
     if (color instanceof Array) {
       if (color.length < 3) return color;
       temp.rgb = [color[0], color[1], color[2]];
@@ -153,8 +154,8 @@ export class Rgb {
         (temp = aRgb[0].toString(16)).length === 1 ? '0' + temp : temp,
         (temp = aRgb[1].toString(16)).length === 1 ? '0' + temp : temp,
         (temp = aRgb[2].toString(16)).length === 1 ? '0' + temp : temp,
-        aRgb[3]
-          ? (temp = Math.floor(aRgb[3] * 255).toString(16)).length === 1
+        aRgb[3] !== undefined
+          ? (temp = Math.round(aRgb[3] * 255).toString(16)).length === 1
             ? '0' + temp
             : temp
           : '',
