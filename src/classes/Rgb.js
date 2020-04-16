@@ -19,10 +19,11 @@ export class Rgb {
   breakInColor(color) {
     const temp = {};
     if (color instanceof Array) {
-      if(color.length < 3) return color
+      if (color.length < 3) return color;
       temp.rgb = [color[0], color[1], color[2]];
+      temp.alpha = 1;
       if (color[3] !== undefined) temp.alpha = color[3];
-      this.type = 'rgb'
+      this.type = 'rgb';
     } else if (typeof color === 'string') {
       // 替换空格
       color = color.replace(/\s/g, '');
@@ -38,19 +39,21 @@ export class Rgb {
           ) || [0, 0, 0, 1];
         temp.rgb = [rgba[0], rgba[1], rgba[2]];
         temp.alpha = rgba[3];
-        this.type = 'rgb'
+        this.type = 'rgb';
       } else if (color.indexOf('rgb') > -1) {
         temp.rgb = color
           .split(',')
           .map(x =>
             typeof x === 'string' ? Number(x.replace(/[^0-9\.]/g, '')) : x,
           ) || [0, 0, 0];
-          this.type = 'rgb'
+        temp.alpha = 1;
+        this.type = 'rgb';
       } else if (color.indexOf('#') > -1) {
         const _rgb = this.hex2rgb(color);
-        temp.rgb = [_rgb[0], _rgb[1], _rgb[2]]
-        if(_rgb[3] !== undefined) temp.alpha = _rgb[3]
-        this.type = 'hex'
+        temp.rgb = [_rgb[0], _rgb[1], _rgb[2]];
+        temp.alpha = 1;
+        if (_rgb[3] !== undefined) temp.alpha = _rgb[3];
+        this.type = 'hex';
       }
     } else {
       return color;
@@ -59,27 +62,26 @@ export class Rgb {
   }
 
   updateColor(color) {
-   color = this.breakInColor(color);
+    color = this.breakInColor(color);
 
-   console.log(color)
+    console.log(color);
 
     let updatedFlag = false; // 判断颜色是否更新
-    
-    
+
     if (color.hsv) {
       if (!this.hsv || this.hsv[0] !== color.hsv[0])
         this.huebgrgb = this.hsv2rgb([color.hsv[0], 1, 1]);
       this.hsv = color.hsv;
       this.rgb = this.hsv2rgb(color.hsv);
 
-      updatedFlag = true
+      updatedFlag = true;
     }
     if (color.rgb) {
       this.rgb = color.rgb;
       this.hsv = this.rgb2hsv(color.rgb);
       this.huebgrgb = this.hsv2rgb([this.hsv[0], 1, 1]);
 
-      updatedFlag = true
+      updatedFlag = true;
     }
     if (color.alpha !== undefined) {
       const alphaTemp =
@@ -88,7 +90,7 @@ export class Rgb {
           : color.alpha;
       this.alpha = Math.floor(alphaTemp * 100) / 100;
 
-      updatedFlag = true
+      updatedFlag = true;
     }
 
     if (
@@ -113,23 +115,22 @@ export class Rgb {
       if (color.r !== undefined) this.rgb = [color.r, this.rgb[1], this.rgb[2]];
       if (color.g !== undefined) this.rgb = [this.rgb[0], color.g, this.rgb[2]];
       if (color.b !== undefined) this.rgb = [this.rgb[0], this.rgb[1], color.b];
-      this.type = 'rgb'
+      this.type = 'rgb';
       return this.updateColor({
         rgb: this.rgb,
       });
     }
 
-    if(updatedFlag === false)
-    return color
+    if (updatedFlag === false) return color;
 
-    console.log(this.rgb)
-    console.log(this.alpha)
+    console.log(this.rgb);
+    console.log(this.alpha);
     if (this.type === 'hex') {
-      if(this.alpha < 1) return this.rgb2hex([...this.rgb, this.alpha])
+      if (this.alpha < 1) return this.rgb2hex([...this.rgb, this.alpha]);
       return this.rgb2hex(this.rgb);
-    } else if( this.type === 'rgb'){
-      if(this.alpha < 1) return `rgba(${this.rgb.join(',')},${this.alpha})`;
-      return `rgb(${this.rgb.join(',')})`
+    } else if (this.type === 'rgb') {
+      if (this.alpha < 1) return `rgba(${this.rgb.join(',')},${this.alpha})`;
+      return `rgb(${this.rgb.join(',')})`;
     }
   }
 
