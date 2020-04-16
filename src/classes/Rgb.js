@@ -1,9 +1,12 @@
 // 原理及公式参考地址: https://www.rapidtables.com/convert/color/index.html
 export class Rgb {
-  hsv;
-  rgb;
-  alpha;
-  huebgrgb; // 显示用rgb色相背景色,选择色相时用
+  hsv = [0, 0, 0];
+  rgb = [0, 0, 0];
+  alpha = 1;
+  huebgrgb = [0, 0, 0]; // 显示用rgb色相背景色,选择色相时用
+
+  hexmap = /^#([0-9a-fA-F]{6}|[0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{8})$/;
+  rgbmap = /^[rR][gG][Bb][\(]((2[0-4][0-9]|25[0-5]|[01]?[0-9][0-9]?),){2}(2[0-4][0-9]|25[0-5]|[01]?[0-9][0-9]?),?[\)]|[rR][gG][Bb][Aa][\(]((2[0-4][0-9]|25[0-5]|[01]?[0-9][0-9]?),){3}(0\.\d{1,2}|1|0)[\)]$/;
 
   constructor(color) {
     this.updateColor(color);
@@ -16,29 +19,40 @@ export class Rgb {
     const temp: any = {};
     if (color instanceof Array) {
       temp.rgb = [color[0], color[1], color[2]];
-      if (color[3] !== undefined) temp.alpha = color[3]
+      if (color[3] !== undefined) temp.alpha = color[3];
     } else if (typeof color === 'string') {
+      // 替换空格
+      color = color.replace(/\s/gi, '');
+      // 颜色正则表达式 验证
+      if (!this.hexmap.test(color) && !this.rgbmap.test(color))
+        // 验证失败 拦截
+        return temp;
+
       if (color.indexOf('rgba') > -1) {
         const rgba = color
-        .split(',')
-        .map(x => Number(x.replace(/[^(0-9|\.)]/gi, ''))) || [0, 0, 0, 1];
-        temp.rgb = [rgba[0], rgba[1], rgba[2]]
-        temp.alpha = rgba[3]
+          .split(',')
+          .map(x =>
+            typeof x === 'string' ? Number(x.replace(/[^(0-9|\.)]/gi, '')) : x,
+          ) || [0, 0, 0, 1];
+        temp.rgb = [rgba[0], rgba[1], rgba[2]];
+        temp.alpha = rgba[3];
       } else if (color.indexOf('rgb') > -1) {
         temp.rgb = color
           .split(',')
-          .map(x => Number(x.replace(/[^(0-9|\.)]/gi, ''))) || [0, 0, 0];
+          .map(x =>
+            typeof x === 'string' ? Number(x.replace(/[^(0-9|\.)]/gi, '')) : x,
+          ) || [0, 0, 0];
       } else if (color.indexOf('#') > -1) {
         temp.rgb = this.hex2rgb(color);
       }
     } else {
-      return color
+      return color;
     }
-    return temp
+    return temp;
   }
 
   updateColor(color) {
-    color = this.breakInColor(color)
+    color = this.breakInColor(color);
     if (color.hsv) {
       if (!this.hsv || this.hsv[0] !== color.hsv[0])
         this.huebgrgb = this.hsv2rgb([color.hsv[0], 1, 1]);
@@ -50,7 +64,14 @@ export class Rgb {
       this.hsv = this.rgb2hsv(color.rgb);
       this.huebgrgb = this.hsv2rgb([this.hsv[0], 1, 1]);
     }
-    if (color.alpha !== undefined) this.alpha = color.alpha
+    if (color.alpha !== undefined) {
+      let alphaTemp =
+        typeof color.alpha === 'string'
+          ? Number(color.alpha.replace(/[^(0-9|\.)]/gi, ''))
+          : color.alpha;
+      this.alpha = Math.floor(alphaTemp * 100) / 100;
+    }
+
     if (
       color.h !== undefined ||
       color.s !== undefined ||
@@ -61,7 +82,7 @@ export class Rgb {
       if (color.h !== undefined) this.hsv = [color.h, this.hsv[1], this.hsv[2]];
       if (color.s !== undefined) this.hsv = [this.hsv[0], color.s, this.hsv[2]];
       if (color.v !== undefined) this.hsv = [this.hsv[0], this.hsv[1], color.v];
-      this.updateColor({
+      return this.updateColor({
         hsv: this.hsv,
       });
     }
@@ -73,30 +94,46 @@ export class Rgb {
       if (color.r !== undefined) this.rgb = [color.r, this.rgb[1], this.rgb[2]];
       if (color.g !== undefined) this.rgb = [this.rgb[0], color.g, this.rgb[2]];
       if (color.b !== undefined) this.rgb = [this.rgb[0], this.rgb[1], color.b];
-      this.updateColor({
+      return this.updateColor({
         rgb: this.rgb,
       });
+    }
+
+    if (this.alpha === 1) {
+      return this.rgb2hex(this.rgb);
+    } else {
+      return `rgba(${this.rgb.join(',')},${this.alpha})`;
     }
   }
 
   rgb2hex(rgb) {
-    const aRgb = rgb instanceof Array ? rgb : rgb.split(',') || [0, 0, 0];
+    console.log('rgb2hex:');
+    console.log(rgb);
+    let aRgb;
+    if (rgb instanceof Array) {
+      aRgb = rgb;
+    } else if (typeof rgb === 'string') {
+      aRgb = rgb.split(',');
+    } else {
+      aRgb = [0, 0, 0];
+    }
+    console.log('aRgb');
+    console.log(aRgb);
     let temp;
+    aRgb = aRgb.map(x =>
+      typeof x === 'string' ? Number(aRgb[0].replace(/[^(0-9|\.)]/gi, '')) : x,
+    );
     return (
       '#' +
       [
-        (temp = Number(aRgb[0].replace(/[^0-9]/gi, '')).toString(16)).length ===
-        1
-          ? '0' + temp
-          : temp,
-        (temp = Number(aRgb[1].replace(/[^0-9]/gi, '')).toString(16)).length ===
-        1
-          ? '0' + temp
-          : temp,
-        (temp = Number(aRgb[2].replace(/[^0-9]/gi, '')).toString(16)).length ===
-        1
-          ? '0' + temp
-          : temp,
+        (temp = aRgb[0].toString(16)).length === 1 ? '0' + temp : temp,
+        (temp = aRgb[1].toString(16)).length === 1 ? '0' + temp : temp,
+        (temp = aRgb[2].toString(16)).length === 1 ? '0' + temp : temp,
+        aRgb[3]
+          ? (temp = (aRgb[3] * 255).toString(16)).length === 1
+            ? '0' + temp
+            : temp
+          : '',
       ].join('')
     );
   }
@@ -107,11 +144,24 @@ export class Rgb {
     if (hex.length === 3) {
       hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
     }
-    return [
-      parseInt(hex[0] + hex[1], 16),
-      parseInt(hex[2] + hex[3], 16),
-      parseInt(hex[4] + hex[5], 16),
-    ];
+    if (hex.length === 4) {
+      hex =
+        hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2] + hex[3] + hex[3];
+    }
+    return hex.length === 6
+      ? [
+          parseInt(hex[0] + hex[1], 16),
+          parseInt(hex[2] + hex[3], 16),
+          parseInt(hex[4] + hex[5], 16),
+        ]
+      : hex.length === 8
+      ? [
+          parseInt(hex[0] + hex[1], 16),
+          parseInt(hex[2] + hex[3], 16),
+          parseInt(hex[4] + hex[5], 16),
+          parseInt(hex[6] + hex[7], 16) / 255,
+        ]
+      : [0, 0, 0];
   }
 
   hsv2rgb([h, s, v]) {
